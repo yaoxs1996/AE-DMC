@@ -2,8 +2,6 @@ import numpy as np
 import sklearn
 assert sklearn.__version__ >= "0.24"
 
-from random import random
-
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster._kmeans import _tolerance, _kmeans_plusplus
 from sklearn.utils import check_random_state
@@ -41,12 +39,10 @@ class CKMeans:
         return centers, indices
 
     def _cloest_clusters(self, datapoint, centers):
-        distances = []
-        for center in centers:
-            d = euclidean_distances(datapoint, center)
-            distances.append(d)
-
+        datapoint = [datapoint]
+        distances = euclidean_distances(centers, datapoint)
         sorted_idx = sorted(range(len(distances)), key=lambda x: distances[x])
+
         return sorted_idx, distances
         # distances = [euclidean_distances(datapoint, center) for center in centers]
         # return sorted(range(len(distances)), key=lambda x: distances[x]), distances
@@ -59,7 +55,7 @@ class CKMeans:
 
         for i in range(n_samples):
             j = labels[i]
-            sq_dist = euclidean_distances(x[i], centers[j])
+            sq_dist = euclidean_distances([x[i]], [centers[j]])
             inertia += sq_dist
 
         return inertia
@@ -67,7 +63,7 @@ class CKMeans:
     def _center_shift(self, centers_old, centers_new):
         center_shift = [0.0] * self.n_clusters
         for j in range(self.n_clusters):
-            center_shift[j] = euclidean_distances(centers_new[j], centers_old[j])
+            center_shift[j] = euclidean_distances([centers_new[j]], [centers_old[j]])[0][0]
 
         return center_shift
 
@@ -108,8 +104,11 @@ class CKMeans:
                 strict_convergence = True
                 break
             else:
-                center_shift_tot = (center_shift**2).sum()
-                if center_shift_tot <= self.tol:
+                #center_shift_tot = (center_shift**2).sum()
+                center_shift_tot = 0.0
+                for i in center_shift:
+                    center_shift_tot += (i**2)
+                if center_shift_tot <= tol:
                     break
             
             labels_old[:] = labels
