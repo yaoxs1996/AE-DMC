@@ -137,3 +137,6 @@ class CKMeans:
         self.inertia_ = best_inertia
 
         return self
+
+    def fit_predict(self, x, y):
+        return self.fit(x, y).labels_
