@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 class MicroCluster:
-    def __init__(self, nb_points=0, linear_sum=None, squared_sum=None, m=100):
+    def __init__(self, nb_points=0, linear_sum=None, squared_sum=None, m=100, mark="old"):
         self.nb_points = nb_points
         self.linear_sum = linear_sum
         self.squared_sum = squared_sum
@@ -11,7 +11,8 @@ class MicroCluster:
         self.radius_factor = 1.8
         self.epsilon = 0.00005
         self.min_variance = math.pow(1, -5)
-        self.radius = self.get_radius()
+        #self.radius = self.get_radius()
+        self.mark = mark
 
     def insert(self, new_point):
         self.nb_points += 1
