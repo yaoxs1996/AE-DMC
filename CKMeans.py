@@ -1,6 +1,6 @@
 import numpy as np
 import sklearn
-assert sklearn.__version__ >= "0.24"
+assert sklearn.__version__ >= "0.24", "scikit-learn版本号低于0.24，请升级"
 
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster._kmeans import _tolerance, _kmeans_plusplus
