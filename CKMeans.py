@@ -4,11 +4,12 @@ assert sklearn.__version__ >= "0.24", "scikit-learn版本号低于0.24，请升�
 
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster._kmeans import _tolerance, _kmeans_plusplus
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, resample
 from sklearn.utils.extmath import row_norms
+from scipy.spatial.distance import euclidean
 
 class CKMeans:
-    def __init__(self, n_clusters=8, init="k-means++", n_init=10,
+    def __init__(self, n_clusters=8, init="random", n_init=10,
                  max_iter=300, tol=1e-4, random_state=None):
         self.n_clusters = n_clusters
         self.init = init
@@ -17,7 +18,7 @@ class CKMeans:
         self.tol = tol
         self.random_state = random_state
 
-    def _init_centroids(self, x, random_state):
+    def _init_centroids(self, x, y):
         n_samples = x.shape[0]
         n_clusters = self.n_clusters
 
@@ -27,11 +28,16 @@ class CKMeans:
         indices = None
 
         if self.init == "k-means++":
-            centers, indices = _kmeans_plusplus(x, n_clusters=self.n_clusters, x_squared_norms=x_squared_norm, random_state=random_state)
+            centers, indices = _kmeans_plusplus(x, n_clusters=self.n_clusters, x_squared_norms=x_squared_norm)
         elif self.init == "random":
-            seeds = random_state.permutation(n_samples)[:n_clusters]
-            centers = x[seeds]
-            indices = seeds
+            # seeds = random_state.permutation(n_samples)[:n_clusters]
+            # centers = x[seeds]
+            # indices = seeds
+            index = np.array(list(range(x.shape[0])))
+            data = np.c_[index, x]
+            data = resample(data, n_samples=n_clusters, stratify=y)
+            indices = data[:, 0]
+            centers = data[:, 1:]
         else:
             print("Wrong init")
             exit(0)
@@ -69,7 +75,7 @@ class CKMeans:
 
     def _cop_kmeans(self, x, y, random_state):
         tol = _tolerance(x, self.tol)
-        centers, indices = self._init_centroids(x, random_state)
+        centers, indices = self._init_centroids(x, y, random_state)
         centers_y = y[indices]
         centers_new = np.zeros_like(centers)
         labels = np.full(x.shape[0], -1, dtype=np.int32)

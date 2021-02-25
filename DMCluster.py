@@ -3,8 +3,10 @@ import sys
 import numpy as np
 
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.cluster import KMeans
 from sklearn.utils import check_array
 from scipy.spatial import distance
+from progressbar import ProgressBar
 
 from typing import List
 
@@ -21,14 +23,17 @@ class DMCluster(BaseEstimator, ClassifierMixin):
 
     def fit(self, x, y):
         x = check_array(x, accept_sparse="csr")
-        ckmeans = CKMeans(n_clusters=self.nb_micro_cluster, random_state=42)
-        micro_cluster_labels = ckmeans.fit_predict(x, y)
+        # ckmeans = CKMeans(n_clusters=self.nb_micro_cluster, random_state=42)
+        # micro_cluster_labels = ckmeans.fit_predict(x, y)
+        kmeans = KMeans(n_clusters=self.nb_micro_cluster, random_state=42)
+        micro_cluster_labels = kmeans.fit_predict(x)
         x = np.column_stack((micro_cluster_labels, x))
         initial_clusters = [x[x[:, 0]==l][:, 1:] for l in set(micro_cluster_labels)]
         for cluster in initial_clusters:
             self.create_micro_cluster(cluster)
 
     def create_micro_cluster(self, cluster, mark="old"):
+        #print(type(cluster))
         n_dim = cluster.shape[1]
         linear_sum = np.zeros(n_dim)
         squared_sum = np.zeros(n_dim)
@@ -43,7 +48,7 @@ class DMCluster(BaseEstimator, ClassifierMixin):
     def distance_to_cluster(self, point, cluster):
         return distance.euclidean(point, cluster.get_center())
 
-    def find_closest_cluster(self, point, micro_clusters: List(model)):
+    def find_closest_cluster(self, point, micro_clusters):
         min_distance = sys.float_info.max
         closest_cluster = None
         for cluster in micro_clusters:
@@ -73,7 +78,10 @@ class DMCluster(BaseEstimator, ClassifierMixin):
     def predict(self, x_test):
         x = check_array(x_test, accept_sparse="csr")
         y_pred = np.empty(shape=(x.shape[0], 1), dtype=np.int8)
-        for i, data in enumerate(x):
+        bar = ProgressBar()
+        for i in bar(range(x.shape[0])):
+        #for i, data in enumerate(x):
+            data = x[i, :]
             cluster = self.find_closest_cluster(data, self.micro_clusters)
             if(self.check_fit_in_cluster(data, cluster) and (cluster.mark=="old")):
                 y_pred[i] = 1
@@ -82,7 +90,7 @@ class DMCluster(BaseEstimator, ClassifierMixin):
                 y_pred[i] = -1
                 cluster.insert(data)
             else:
-                self.create_micro_cluster([data], mark="new")
+                self.create_micro_cluster(np.array([data]), mark="new")
                 y_pred[i] = -1
 
         return y_pred
