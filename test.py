@@ -8,6 +8,8 @@ from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras import losses
 
+import utils
+import AutoEncoder
 from DMCluster import DMCluster
 from AutoEncoder import Autoencoder
 
@@ -64,5 +66,24 @@ def letter_exp():
     print(f1_score(y_test, y_pred, average="micro"))
     print(confusion_matrix(y_test, y_pred))
 
+def test():
+    x, y = utils.load_data(name="letter_csv")
+    scaler = MinMaxScaler()
+    x = scaler.fit_transform(x)
+
+    model, encoder = AutoEncoder.build_model(x, y)
+    #print("调用encoder", id(encoder))
+    model.compile(optimizer="adam",
+        loss={
+            "classifier": losses.SparseCategoricalCrossentropy(from_logits=True),
+            "decoder": losses.MeanSquaredError()
+        },
+        metrics={
+            "classifier": "accuracy"
+        })
+
+    model.fit(x, {"classifier": y, "decoder": x}, epochs=20, batch_size=32)
+
 if __name__ == "__main__":
     letter_exp()
+    #test()

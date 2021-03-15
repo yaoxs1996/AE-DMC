@@ -26,6 +26,7 @@ def model(data):
     return model
 
 def functional_model(data):
+    print(data.shape[1])
     inputs = Input(shape=data.shape[1])
     att = SelfAttention(8)(inputs)
     att = layers.GlobalAveragePooling1D()(att)

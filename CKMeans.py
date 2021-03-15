@@ -1,9 +1,9 @@
 import numpy as np
 import sklearn
-assert sklearn.__version__ >= "0.24", "scikit-learn版本号低于0.24，请升级"
+#assert sklearn.__version__ >= "0.24", "scikit-learn版本号低于0.24，请升级"
 
 from sklearn.metrics.pairwise import euclidean_distances
-from sklearn.cluster._kmeans import _tolerance, _kmeans_plusplus
+from sklearn.cluster._kmeans import _tolerance
 from sklearn.utils import check_random_state, resample
 from sklearn.utils.extmath import row_norms
 from scipy.spatial.distance import euclidean
@@ -28,7 +28,8 @@ class CKMeans:
         indices = None
 
         if self.init == "k-means++":
-            centers, indices = _kmeans_plusplus(x, n_clusters=self.n_clusters, x_squared_norms=x_squared_norm)
+            #centers, indices = _kmeans_plusplus(x, n_clusters=self.n_clusters, x_squared_norms=x_squared_norm)
+            pass
         elif self.init == "random":
             # seeds = random_state.permutation(n_samples)[:n_clusters]
             # centers = x[seeds]
