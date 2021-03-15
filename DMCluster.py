@@ -8,8 +8,6 @@ from sklearn.utils import check_array
 from scipy.spatial import distance
 from progressbar import ProgressBar
 
-from typing import List
-
 from CKMeans import CKMeans
 from MicroCluster import MicroCluster as model
 

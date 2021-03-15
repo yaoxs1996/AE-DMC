@@ -1,18 +1,14 @@
 import numpy as np
-import sklearn
-#assert sklearn.__version__ >= "0.24", "scikit-learn版本号低于0.24，请升级"
 
-from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster._kmeans import _tolerance
 from sklearn.utils import check_random_state, resample
 from sklearn.utils.extmath import row_norms
 from scipy.spatial.distance import euclidean
 
 class CKMeans:
-    def __init__(self, n_clusters=8, init="random", n_init=10,
+    def __init__(self, n_clusters=8, n_init=10,
                  max_iter=300, tol=1e-4, random_state=None):
         self.n_clusters = n_clusters
-        self.init = init
         self.n_init = n_init
         self.max_iter = max_iter
         self.tol = tol
@@ -20,34 +16,24 @@ class CKMeans:
 
     def _init_centroids(self, x, y):
         n_samples = x.shape[0]
+        n_dim = x.shape[1]
         n_clusters = self.n_clusters
 
         x_squared_norm = row_norms(x, squared=True)
 
-        centers = np.empty((n_clusters, x.shape[1]), dtype=x.dtype)
+        centers = np.empty((n_clusters, n_dim), dtype=x.dtype)
         indices = None
 
-        if self.init == "k-means++":
-            #centers, indices = _kmeans_plusplus(x, n_clusters=self.n_clusters, x_squared_norms=x_squared_norm)
-            pass
-        elif self.init == "random":
-            # seeds = random_state.permutation(n_samples)[:n_clusters]
-            # centers = x[seeds]
-            # indices = seeds
-            index = np.array(list(range(x.shape[0])))
-            data = np.c_[index, x]
-            data = resample(data, n_samples=n_clusters, stratify=y)
-            indices = data[:, 0]
-            centers = data[:, 1:]
-        else:
-            print("Wrong init")
-            exit(0)
-
+        index = np.array(list(range(n_samples)))
+        data = np.c_[index, x]
+        data = resample(data, n_samples=n_clusters, stratify=y)
+        indices = data[:, 0]
+        centers = data[:, 1:]
+        
         return centers, indices
 
     def _cloest_clusters(self, datapoint, centers):
-        datapoint = [datapoint]
-        distances = euclidean_distances(centers, datapoint)
+        distances = [euclidean(datapoint, center) for center in centers]
         sorted_idx = sorted(range(len(distances)), key=lambda x: distances[x])
 
         return sorted_idx, distances
@@ -62,7 +48,8 @@ class CKMeans:
 
         for i in range(n_samples):
             j = labels[i]
-            sq_dist = euclidean_distances([x[i]], [centers[j]])
+            sq_dist = euclidean(x[i], centers[j])
+            # sq_dist = euclidean_distances([x[i]], [centers[j]])
             inertia += sq_dist
 
         return inertia
@@ -70,13 +57,14 @@ class CKMeans:
     def _center_shift(self, centers_old, centers_new):
         center_shift = [0.0] * self.n_clusters
         for j in range(self.n_clusters):
-            center_shift[j] = euclidean_distances([centers_new[j]], [centers_old[j]])[0][0]
+            # center_shift[j] = euclidean_distances([centers_new[j]], [centers_old[j]])[0][0]
+            center_shift[j] = euclidean(centers_new[j], centers_old[j])
 
         return center_shift
 
-    def _cop_kmeans(self, x, y, random_state):
+    def _cop_kmeans(self, x, y):
         tol = _tolerance(x, self.tol)
-        centers, indices = self._init_centroids(x, y, random_state)
+        centers, indices = self._init_centroids(x, y)
         centers_y = y[indices]
         centers_new = np.zeros_like(centers)
         labels = np.full(x.shape[0], -1, dtype=np.int32)
@@ -125,14 +113,14 @@ class CKMeans:
         return labels, inertia, centers
 
     def fit(self, x, y):
-        random_state = check_random_state(self.random_state)
+        # random_state = check_random_state(self.random_state)
 
         best_centers = None
         best_inertia = None
         best_labels = None
 
         for _ in range(self.n_init):
-            labels, inertia, centers = self._cop_kmeans(x, y, random_state)
+            labels, inertia, centers = self._cop_kmeans(x, y)
 
             if best_inertia is None or inertia < best_inertia:
                 best_labels = labels
