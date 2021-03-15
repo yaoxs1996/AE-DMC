@@ -78,5 +78,5 @@ def build_model(x, y):
     decoded = decoder(encoded)
 
     clf_pred = layers.Dense(len(np.unique(y)), activation="softmax", name="classifier")(encoded)
-    model = Model(inputs=input, outputs=[clf_pred, decoded])
+    model = Model(inputs=input, outputs=[decoded, clf_pred])
     return model, encoder

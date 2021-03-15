@@ -75,8 +75,8 @@ def test():
     #print("调用encoder", id(encoder))
     model.compile(optimizer="adam",
         loss={
+            "decoder": losses.MeanSquaredError(),
             "classifier": losses.SparseCategoricalCrossentropy(from_logits=True),
-            "decoder": losses.MeanSquaredError()
         },
         metrics={
             "classifier": "accuracy"
@@ -85,5 +85,5 @@ def test():
     model.fit(x, {"classifier": y, "decoder": x}, epochs=20, batch_size=32)
 
 if __name__ == "__main__":
-    letter_exp()
-    #test()
+    # letter_exp()
+    test()
