@@ -19,9 +19,9 @@ def load_data(name):
     return x, y
 
 def split_train_test(x, y, omega):
-    n_classes = np.unique(y).tolist()
-    train_set = sample(n_classes, omega)
-    test_set = list(set(n_classes) - set(train_set))
+    classes = np.unique(y).tolist()
+    train_set = sample(classes, omega)
+    test_set = list(set(classes) - set(train_set))
 
     train_index = [i in train_set for i in y]
     test_index = [i in test_set for i in y]
@@ -40,11 +40,11 @@ def split_train_test(x, y, omega):
     return x_train, y_train, x_test, y_test
 
 def split_train_val(x, y):
-    n_classes = np.unique(y).to_list()
-    n_known = int(n_classes / 2 + 0.5)
+    classes = np.unique(y).tolist()
+    n_known = int(len(classes) / 2 + 0.5)
 
-    train_set = sample(n_classes, n_known)
-    val_set = list(set(n_classes) - set(train_set))
+    train_set = sample(classes, n_known)
+    val_set = list(set(classes) - set(train_set))
 
     train_index = [i in train_set for i in y]
     val_index = [i in val_set for i in y]
@@ -57,7 +57,8 @@ def split_train_val(x, y):
 
     x_train, x_extra, y_train, _ = train_test_split(x_train, y_train, test_size=0.4, shuffle=True, stratify=y_train)
 
-    x_val = np.r_[x_extra, x_val, x_extra]
-    y_val = np.r_[np.ones(x_extra.shape[0]), np.ones(x_val.shape[0])*(-1), np.ones(x_extra.shape[0])]
+    # x_val = np.r_[x_extra, x_val, x_extra]
+    x_val_ = np.concatenate((x_extra, x_val), axis=0)
+    y_val = np.r_[np.ones(x_extra.shape[0]), np.ones(x_val.shape[0])*(-1)]
 
-    return x_train, y_train, x_val, y_val
+    return x_train, y_train, x_val_, y_val

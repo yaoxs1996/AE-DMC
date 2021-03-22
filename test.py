@@ -22,7 +22,7 @@ def letter_exp():
 
     scaler = MinMaxScaler()
     x_train = scaler.fit_transform(x_train)
-    x_test = scaler.transform(x_test)
+    x_val = scaler.transform(x_val)
 
     # autoencoder = Autoencoder(input_dim=x_train.shape[1], h1=12, h2=8, latent_dim=4)
     # autoencoder.compile(optimizer="adam", loss=losses.MeanSquaredError())
@@ -30,6 +30,9 @@ def letter_exp():
 
     # x_train = autoencoder.encoder(x_train)
     # x_test = autoencoder.encoder(x_test)
+
+    le = LabelEncoder()
+    y_train = le.fit_transform(y_train)
 
     autoencoder, encoder = AutoEncoder.build_model(x_train, y_train)
     autoencoder.compile(optimizer="adam",
@@ -43,7 +46,7 @@ def letter_exp():
     autoencoder.fit(x_train, {"classifier": y_train, "decoder": x_train}, epochs=20, batch_size=32)
 
     x_train = encoder(x_train)
-    x_test = encoder(x_test)
+    x_val = encoder(x_val)
 
     model = DMCluster(nb_mirco_cluster=100, radius_factor=1.5, new_radius=0.9)
     print("开始训练")
@@ -51,7 +54,7 @@ def letter_exp():
     print("开始检测")
     y_pred = model.predict(x_val)
     print(f1_score(y_val, y_pred, average="micro"))
-    print(confusion_matrix(y_test, y_pred))
+    print(confusion_matrix(y_val, y_pred))
 
 def test():
     x, y = utils.load_data(name="letter_csv")
